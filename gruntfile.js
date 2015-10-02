@@ -1,6 +1,8 @@
+/// <binding />
+/// <reference path="test/resources/jquery/jquery.js" />
 /*
- * grunt-eo-exec
- * https://github.com/lot224/grunt-eo-exec
+ * grunt-eo-asset
+ * https://github.com/lot224/grunt-eo-asset
  *
  * Copyright (c) 2015 David Gardyasz
  * Licensed under the MIT license.
@@ -11,39 +13,82 @@ module.exports = function (grunt) {
 
   grunt.initConfig({
 
-    eo_exec: {
-      test: {
-        commands: [
-          {
-            // MSBuild.exe app\app.sln /p:Configuration=Release /t:Clean;Build
-            // This executes but no console information is displayed.
-            cmd: 'C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\msbuild.exe',
-            params: [
-              'app\\app.sln',
-              '/p:Configuration=Release',
-              '/t:Clean;Build'
+    eo_asset: {
+      options: {
+        "bootstrap": {
+          requires: ['angular', 'jquery'],
+          tasks: {
+            "concat": [
+              {
+                "css": [
+                    "test/resources/bootstrap/css/bootstrap.min.css",
+                    "test/resources/bootstrap/css/bootstrap-theme.min.css"
+                ]
+              }
             ],
-            exitCode: null
-          }, {
-            // cmd /s /c msbuild.exe app\app.sln /p:Configuration=Release /t:Clean;Build
-            // This spawns a cmd and executes the msbuild.exe in the 
-            // cmd command reporting back to grunt the output.
-            spawn: true,
-            cmd: 'cmd',  // windows cmd.exe command which should be in the enviroment path
-            params: ['/s', '/c',
-              'C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\msbuild.exe'
-              + ' app\\app.sln'
-              + ' /p:Configuration=Release'
-              + ' /t:Clean;Build'
+            "uglify": [
+              "test/resources/bootstrap/js/bootstrap.js"
+            ],
+            "copy": [
+              { cwd: "test/resources/bootstrap/fonts", src: "**/*.*", dest: "out/css/fonts" }
             ]
-          }, {
-            // A simple bat file that echo's "hello world".
-            cmd: 'test.bat',
-            exitCode: null
           }
-        ],
+        },
+        "angular": {
+          requires: ['jquery'],
+          tasks: {
+            "uglify": ['test/resources/angular/angular.js']
+          }
+        },
+        "ngSanitize": {
+          requires: ['angular'],
+          tasks: {
+            "uglify": ['test/resources/angular/angular-sanitize.js']
+          }
+        },
+        "ngRoute": {
+          requires: ['angular', 'berger'],
+          tasks: {
+            "uglify": ['test/resources/angular/angular-route.js']
+          }
+        },
+        "ngAnimate": {
+          requires: ['angular'],
+          tasks: {
+            "uglify": ['test/resources/angular/angular-animate.js']
+          }
+        },
+        "jquery": {
+          requires: [],
+          tasks: {
+            "uglify": ['test/resources/jquery/jquery.js']
+          }
+        },
+        "myApp": {
+          requires: ['angular','bootstrap','jquery','asdf'],
+          tasks: {
+            "uglify": ['test/myApp.js']
+          }
+        }
       },
+      test: {
+        assets: ['angular', 'bootstrap', 'ngRoute', 'ngSanitize', 'ngAnimate', 'myApp'],
+        options: {
+          "uglify": {
+            banner: "(function(window, undefined) {'use strict';\n\n",
+            footer: "\n\n})(window);",
+            mangle: false,
+            beautify: true,
+          }
+        },
+        tasks: {
+          "uglify": function (items) {
+            return { files: { src: items, dest: 'out/vendors.js' } };
+          }
+        }
+      }
     }
+
 
   });
 
@@ -51,5 +96,5 @@ module.exports = function (grunt) {
   grunt.loadTasks('tasks');
 
   // By default, lint and run all tests.
-  grunt.registerTask('default', ['eo_exec']);
+  grunt.registerTask('default', ['eo_asset:test']);
 };

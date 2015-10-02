@@ -1,2 +1,2 @@
-# grunt-eo-exec
-Grunt task to execute/spawn shell commands
+# grunt-eo-asset
+Grunt task to define asset packages and requirements.
